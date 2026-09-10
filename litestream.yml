@@ -3,7 +3,7 @@ dbs:
     replicas:
       - type: s3
         bucket: "${B2_BUCKET_NAME}"
-        path: omniroute.db
+        path: storage.sqlite
         endpoint: "https://s3.us-west-004.backblazeb2.com"            # ← 改成你自己的 endpoint
         region: "us-west-004"                                         # ← 改成你自己的区域
         access-key-id: "${LITESTREAM_ACCESS_KEY_ID}"
