@@ -1,5 +1,5 @@
 dbs:
-  - path: /data/omniroute.db
+  - path: /data/storage.sqlite
     replicas:
       - type: s3
         bucket: "${B2_BUCKET_NAME}"
