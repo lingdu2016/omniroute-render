@@ -1,0 +1,52 @@
+name: Auto Update OmniRoute
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Roda a cada 6 horas
+  workflow_dispatch:        # Permite disparar manualmente com 1 clique
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Buscar última versão oficial
+        id: official_release
+        run: |
+          LATEST=$(curl -sL https://api.github.com/repos/diegosouzapw/OmniRoute/releases/latest | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^v//')
+          if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+            echo "Aviso: Não foi possível obter a tag da release oficial."
+            exit 0
+          fi
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+          echo "Última versão oficial no Docker Hub: $LATEST"
+
+      - name: Verificar versão atual no Dockerfile
+        id: current_version
+        run: |
+          CURRENT=$(grep -oE 'diegosouzapw/omniroute:[0-9.]+' Dockerfile | cut -d':' -f2)
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Versão atual configurada: $CURRENT"
+
+      - name: Atualizar Dockerfile se houver nova versão
+        run: |
+          LATEST="${{ steps.official_release.outputs.latest }}"
+          CURRENT="${{ steps.current_version.outputs.current }}"
+
+          if [ -n "$LATEST" ] && [ "$CURRENT" != "$LATEST" ]; then
+            echo "Nova versão detectada! Atualizando de $CURRENT para $LATEST..."
+            sed -i -E "s|diegosouzapw/omniroute:[^ ]+|diegosouzapw/omniroute:$LATEST|g" Dockerfile
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Dockerfile
+            git commit -m "chore(auto-update): atualizar OmniRoute para $LATEST"
+            git push
+          else
+            echo "OmniRoute já está na versão mais recente ($CURRENT)."
+          fi
