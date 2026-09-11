@@ -1,15 +1,21 @@
-FROM diegosouzapw/omniroute:3.8.50
+FROM node:22-alpine
 
-# Instala o Litestream para streaming contínuo do SQLite para o Cloudflare R2
-ADD https://github.com/benbjohnson/litestream/releases/download/v0.3.13/litestream-v0.3.13-linux-amd64.tar.gz /tmp/litestream.tar.gz
-USER root
-RUN tar -C /usr/local/bin -xzf /tmp/litestream.tar.gz && rm /tmp/litestream.tar.gz
+WORKDIR /app
 
-COPY litestream.yml /etc/litestream.yml
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Install dependencies
+RUN npm install -g omniroute@3.8.50
 
-# Garante permissões no diretório de dados
-RUN mkdir -p /data && chown -R node:node /data 2>/dev/null || true
+# Copy database backup
+COPY storage.sqlite.gz /tmp/storage.sqlite.gz
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Create omniroute directory
+RUN mkdir -p /root/.omniroute
+
+# Restore database on startup
+RUN cd /tmp && gunzip -c storage.sqlite.gz > /root/.omniroute/storage.sqlite
+
+# Expose port
+EXPOSE 10000
+
+# Start omniroute with keep-alive
+CMD omniroute serve --port 10000 --no-open --log
