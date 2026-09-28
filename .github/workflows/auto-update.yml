@@ -2,7 +2,7 @@ name: Auto Update OmniRoute
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Roda a cada 6 horas
+    - cron: '0 20 20 * *'  # 每月Runs at 20:00, on day 20 of the month
   workflow_dispatch:        # Permite disparar manualmente com 1 clique
 
 permissions:
