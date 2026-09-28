@@ -3,6 +3,29 @@ services:
     name: omniroute-render
     runtime: docker
     dockerfilePath: ./Dockerfile
-    port: 10000
+    plan: free
+    region: oregon   # 按你实际改
+    dockerCommand: sh -c "omniroute serve --port $PORT --no-open --log"
     healthCheckPath: /
-    maxShutdownDelay: 10
+    maxShutdownDelay: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OMNIROUTE_SERVER_HOST
+        value: "0.0.0.0"
+      - key: DATA_DIR
+        value: /root/.omniroute
+      - key: OMNIROUTE_MEMORY_MB
+        value: "512"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=512"
+      # 下面在 Render Dashboard 里填真实值，不要写进仓库
+      - key: JWT_SECRET
+        generateValue: true
+      - key: API_KEY_SECRET
+        generateValue: true
+      - key: INITIAL_PASSWORD
+        sync: false   # 手动在面板设
+      # 若打包的库用过加密，必须填原来的 key，否则敏感字段读不了
+      # - key: STORAGE_ENCRYPTION_KEY
+      #   sync: false
